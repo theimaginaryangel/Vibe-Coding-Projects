@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import type { HistoryItem } from '../types';
 import { HistoryIcon } from './icons/HistoryIcon';
@@ -62,7 +63,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({ history, onSelectIte
             <select
                 value={sortKey}
                 onChange={(e) => setSortKey(e.target.value as SortKey)}
-                className="text-sm p-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+                className="text-sm p-1 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition duration-150"
                 aria-label="Sort by"
             >
                 <option value="timestamp">Sort by Date</option>
@@ -89,7 +90,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({ history, onSelectIte
               <li key={item.id}>
                 <button
                   onClick={() => onSelectItem(item)}
-                  className="w-full text-left p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-blue-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-left p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-brand-secondary dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-primary"
                 >
                   <p className="font-medium text-sm text-gray-800 dark:text-gray-200 truncate">
                     {item.params.userInput}

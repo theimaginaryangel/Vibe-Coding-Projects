@@ -1,12 +1,14 @@
 
-import { GoogleGenAI } from "@google/genai";
-import type { PromptGenerationParams, GroundingChunk } from '../types';
+import { GoogleGenAI, Chat } from "@google/genai";
+import type { PromptGenerationParams, GroundingChunk, ChatMode, ChatMessage } from '../types';
 
 if (!process.env.API_KEY) {
   throw new Error("API_KEY environment variable not set");
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+// --- PROMPT ENGINEERING SERVICE ---
 
 export async function generatePromptWithGrounding(params: PromptGenerationParams): Promise<{ prompt: string; sources: GroundingChunk[]; regexMatches: string[] }> {
   const { userInput, context, tone, format, enableRegexGrounding, regexPattern, file, linkUrl } = params;
@@ -23,7 +25,6 @@ export async function generatePromptWithGrounding(params: PromptGenerationParams
     }
   }
 
-  // Base part of the meta-prompt
   let metaPrompt = `
     As an expert prompt engineer, your task is to create a clear, concise, and highly effective prompt for a generative AI model. 
     Use the latest information from the web to ensure the prompt is up-to-date and contextually relevant.
@@ -72,7 +73,6 @@ export async function generatePromptWithGrounding(params: PromptGenerationParams
   try {
     let requestContents: any;
     if (file && file.type.startsWith('image/')) {
-      // It's a data URL like "data:image/png;base64,iVBORw..."
       const [mimeTypePart, base64Data] = file.content.split(';base64,');
       const mimeType = mimeTypePart.split(':')[1];
       
@@ -150,5 +150,91 @@ export async function generatePromptWithGrounding(params: PromptGenerationParams
         throw new Error(`[Service Error] An unexpected error occurred while communicating with the API: ${error.message}`);
     }
     throw new Error("[Unknown Error] An unexpected issue occurred. Please try again.");
+  }
+}
+
+
+// --- CHATBOT SERVICE ---
+
+const chatSessions = new Map<ChatMode, Chat>();
+
+function getModelConfigForMode(mode: ChatMode) {
+  switch (mode) {
+    case 'fast':
+      return { modelName: 'gemini-2.5-flash-lite', config: {} };
+    case 'web':
+      return { modelName: 'gemini-2.5-flash', config: { tools: [{ googleSearch: {} }] } };
+    case 'deep-thought':
+      return { modelName: 'gemini-2.5-pro', config: { thinkingConfig: { thinkingBudget: 32768 } } };
+    case 'standard':
+    default:
+      return { modelName: 'gemini-2.5-flash', config: {} };
+  }
+}
+
+function getChatSession(mode: ChatMode): Chat {
+  if (chatSessions.has(mode)) {
+    return chatSessions.get(mode)!;
+  }
+  
+  const { modelName, config } = getModelConfigForMode(mode);
+  
+  const chat = ai.chats.create({
+    model: modelName,
+    config: config,
+  });
+  
+  chatSessions.set(mode, chat);
+  return chat;
+}
+
+export async function* sendMessageToBot(
+  message: string,
+  mode: ChatMode
+): AsyncGenerator<{ textChunk?: string; sources?: GroundingChunk[]; error?: string }> {
+  try {
+    const chat = getChatSession(mode);
+    const responseStream = await chat.sendMessageStream({ message });
+
+    let finalSources: GroundingChunk[] = [];
+
+    for await (const chunk of responseStream) {
+      const textChunk = chunk.text;
+      if (textChunk) {
+        yield { textChunk };
+      }
+      
+      const groundingChunks = chunk.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      const sources = groundingChunks.filter((c: unknown) => {
+        const chunkTyped = c as GroundingChunk;
+        return (chunkTyped.web && chunkTyped.web.uri);
+      }) as GroundingChunk[];
+      
+      if(sources.length > 0) {
+        finalSources = sources;
+      }
+    }
+
+    if (finalSources.length > 0) {
+        yield { sources: finalSources };
+    }
+
+  } catch (error) {
+     console.error("Error sending message to bot:", error);
+    let errorMessage = "[Service Error] An unexpected error occurred while communicating with the API.";
+    if (error instanceof Error) {
+        if (error.message.includes('API key not valid')) {
+            errorMessage = "[API Key Error] Your API key is invalid. Please check your configuration.";
+        } else if (error.message.toLowerCase().includes('failed to fetch')) {
+            errorMessage = "[Network Error] Could not connect to the Gemini API.";
+        } else if (error.message.includes('429')) { 
+            errorMessage = "[API Quota Exceeded] You have exceeded your request quota.";
+        } else if (error.message.match(/\[\d{3}\]/)) { 
+            errorMessage = `[API Error] The model failed to generate a response. Details: ${error.message}`;
+        } else {
+             errorMessage = `[Service Error] An unexpected error occurred: ${error.message}`;
+        }
+    }
+    yield { error: errorMessage };
   }
 }

@@ -105,7 +105,7 @@ export const GeneratedPrompt: React.FC<GeneratedPromptProps> = ({ prompt, source
     }
     return (
       <>
-        <div className="relative p-4 bg-blue-50 dark:bg-gray-900/50 border border-blue-200 dark:border-gray-700 rounded-lg">
+        <div className="relative p-4 bg-brand-secondary dark:bg-brand-primary/10 border border-green-200 dark:border-gray-700 rounded-lg">
           <div className="absolute top-2 right-2 flex space-x-2">
             <button
               onClick={handleExport}
@@ -160,7 +160,7 @@ export const GeneratedPrompt: React.FC<GeneratedPromptProps> = ({ prompt, source
                             href={webSource.uri} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="text-blue-600 dark:text-blue-400 hover:underline text-sm break-all"
+                            className="text-brand-primary dark:text-brand-accent hover:underline text-sm break-all"
                         >
                             {webSource.title || webSource.uri}
                         </a>

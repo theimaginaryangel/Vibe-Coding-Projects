@@ -42,3 +42,15 @@ export interface HistoryItem {
   };
   timestamp: number;
 }
+
+
+export type ChatMode = 'standard' | 'fast' | 'web' | 'deep-thought';
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  sources?: GroundingChunk[];
+  isLoading?: boolean;
+  error?: string;
+}

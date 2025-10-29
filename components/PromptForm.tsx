@@ -4,7 +4,7 @@ import { TONE_OPTIONS, FORMAT_OPTIONS } from '../constants';
 import type { PromptGenerationParams } from '../types';
 import { SparklesIcon } from './icons/SparklesIcon';
 import { UploadIcon } from './icons/UploadIcon';
-import { XIcon } from './icons/XIcon';
+import { CloseIcon } from './icons/CloseIcon';
 import { LinkIcon } from './icons/LinkIcon';
 
 interface PromptFormProps {
@@ -105,7 +105,7 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           placeholder="e.g., Generate a marketing slogan for a new coffee brand"
-          className="w-full h-32 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+          className="w-full h-32 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition duration-150"
           required
         />
       </div>
@@ -119,7 +119,7 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
           value={context}
           onChange={(e) => setContext(e.target.value)}
           placeholder="e.g., The brand is eco-friendly and targets young professionals."
-          className="w-full h-24 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+          className="w-full h-24 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition duration-150"
         />
       </div>
       
@@ -129,10 +129,10 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
         </Label>
         
         {file ? (
-            <div className="flex items-center justify-between p-2.5 bg-blue-100 dark:bg-blue-900/40 rounded-lg text-sm">
-                <p className="font-medium text-blue-800 dark:text-blue-200 truncate">{file.name}</p>
-                <button type="button" onClick={removeFile} className="ml-2 p-1 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800">
-                    <XIcon className="w-4 h-4 text-blue-700 dark:text-blue-300" />
+            <div className="flex items-center justify-between p-2.5 bg-brand-secondary dark:bg-brand-primary/20 rounded-lg text-sm">
+                <p className="font-medium text-brand-primary dark:text-brand-accent truncate">{file.name}</p>
+                <button type="button" onClick={removeFile} className="ml-2 p-1 rounded-full hover:bg-green-200 dark:hover:bg-brand-primary/40">
+                    <CloseIcon className="w-4 h-4 text-brand-primary dark:text-brand-accent" />
                 </button>
             </div>
         ) : historyFileInfo ? (
@@ -140,12 +140,12 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
               File from history: <span className="font-medium">{historyFileInfo.name}</span>. Please re-upload to use.
             </div>
         ) : (
-            <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+            <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-brand-primary dark:hover:border-brand-accent transition-colors">
                 <input type="file" id="file-upload" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" disabled={!!linkUrl} accept="image/*,text/plain,.md,.csv,.json,.html,.css,.js,.ts"/>
                 <div className="flex flex-col items-center justify-center space-y-2 text-gray-500 dark:text-gray-400">
                     <UploadIcon className="w-8 h-8"/>
                     <p>
-                        <span className="font-semibold text-blue-600 dark:text-blue-400">Click to upload</span> or drag and drop
+                        <span className="font-semibold text-brand-primary dark:text-brand-accent">Click to upload</span> or drag and drop
                     </p>
                     <p className="text-xs">Image or text files</p>
                 </div>
@@ -160,7 +160,7 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
                 value={linkUrl}
                 onChange={handleLinkChange}
                 disabled={!!file || !!historyFileInfo}
-                className="w-full p-2 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                className="w-full p-2 pl-10 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition duration-150 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
             />
         </div>
       </div>
@@ -173,7 +173,7 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
                 id="enableRegexGrounding" 
                 checked={enableRegexGrounding}
                 onChange={(e) => setEnableRegexGrounding(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-50 dark:bg-gray-700"
+                className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-brand-primary focus:ring-brand-primary bg-gray-50 dark:bg-gray-700"
             />
             <label htmlFor="enableRegexGrounding" className="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Enable Regex Pattern Grounding
@@ -200,7 +200,7 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
                     value={regexPattern}
                     onChange={(e) => setRegexPattern(e.target.value)}
                     placeholder="e.g., to find US phone numbers: \(\d{3}\) \d{3}-\d{4}"
-                    className="w-full p-2 font-mono text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+                    className="w-full p-2 font-mono text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition duration-150"
                 />
             </div>
         )}
@@ -215,7 +215,7 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
             id="tone"
             value={tone}
             onChange={(e) => setTone(e.target.value)}
-            className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+            className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition duration-150"
           >
             {TONE_OPTIONS.map((opt) => (
               <option key={opt} value={opt}>{opt}</option>
@@ -230,7 +230,7 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
             id="format"
             value={format}
             onChange={(e) => setFormat(e.target.value)}
-            className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150"
+            className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition duration-150"
           >
             {FORMAT_OPTIONS.map((opt) => (
               <option key={opt} value={opt}>{opt}</option>
@@ -243,11 +243,11 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
         <button
           type="submit"
           disabled={isLoading || !userInput.trim()}
-          className="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800 transition-colors duration-200"
+          className="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-brand-primary hover:bg-brand-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary disabled:bg-gray-400 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800 transition-colors duration-200"
         >
           {isLoading ? (
             <>
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
