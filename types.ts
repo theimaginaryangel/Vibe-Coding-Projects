@@ -3,7 +3,21 @@ export interface PromptGenerationParams {
   userInput: string;
   context: string;
   tone: string;
-  format: string;
+  format:string;
+  enableRegexGrounding: boolean;
+  regexPattern: string;
+  // For active generation
+  file?: {
+    name: string;
+    type: string;
+    content: string; // Can be base64 data URL or text content
+  };
+  linkUrl?: string;
+  // For history display only
+  fileInfo?: {
+    name: string;
+    type: string;
+  }
 }
 
 export interface GroundingChunk {
@@ -15,4 +29,16 @@ export interface GroundingChunk {
     uri: string;
     title: string;
   };
+}
+
+export interface HistoryItem {
+  id: string;
+  // Note: 'file' property with content should be stripped before saving
+  params: PromptGenerationParams;
+  result: {
+    prompt: string;
+    sources: GroundingChunk[];
+    regexMatches?: string[];
+  };
+  timestamp: number;
 }

@@ -8,15 +8,23 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export async function generatePromptWithGrounding(params: PromptGenerationParams): Promise<{ prompt: string; sources: GroundingChunk[] }> {
-  const { userInput, context, tone, format } = params;
+export async function generatePromptWithGrounding(params: PromptGenerationParams): Promise<{ prompt: string; sources: GroundingChunk[]; regexMatches: string[] }> {
+  const { userInput, context, tone, format, enableRegexGrounding, regexPattern, file, linkUrl } = params;
 
-  if (!userInput) {
-    throw new Error("User input cannot be empty.");
+  if (!userInput.trim()) {
+    throw new Error("[Invalid Input] The 'Your Goal' field cannot be empty. Please describe what you want the AI to do.");
   }
 
-  // This is the "meta-prompt" that instructs the AI on how to behave.
-  const metaPrompt = `
+  if (enableRegexGrounding && regexPattern) {
+    try {
+        new RegExp(regexPattern);
+    } catch (e) {
+        throw new Error("[Invalid Input] The provided Regex Pattern is invalid. Please check its syntax.");
+    }
+  }
+
+  // Base part of the meta-prompt
+  let metaPrompt = `
     As an expert prompt engineer, your task is to create a clear, concise, and highly effective prompt for a generative AI model. 
     Use the latest information from the web to ensure the prompt is up-to-date and contextually relevant.
 
@@ -31,14 +39,61 @@ export async function generatePromptWithGrounding(params: PromptGenerationParams
 
     **Desired Output Format for AI Response:**
     ${format}
-
-    Based on this information, generate an optimized prompt. The prompt should be self-contained and ready to be used. It must clearly define the AI's role, the specific task, any constraints, the expected format, and provide examples if it would improve clarity.
   `;
+  
+  if (file && !file.type.startsWith('image/')) {
+    metaPrompt += `\n\n**Attached File Content (${file.name}):**\n${file.content}`;
+  }
+
+  if (linkUrl) {
+    metaPrompt += `\n\n**Referenced Public Link:**\n${linkUrl}`;
+  }
+
+
+  if (enableRegexGrounding && regexPattern) {
+    metaPrompt += `
+    **Regex Grounding Task:**
+    In addition to the main goal, you MUST perform the following task: Search through the content of the web search results for any text that matches this regular expression: \`${regexPattern}\`.
+
+    **Mandatory Output Structure:**
+    Your entire response MUST follow this exact two-part structure, separated by a unique delimiter line "---PROMPT-SEPARATOR---".
+
+    Part 1 (before the separator): List every unique text snippet that matched the regex. Each match should be on a new line. If you find no matches, you MUST write the exact phrase "No matches found.".
+
+    Part 2 (after the separator): Write the final, optimized prompt based on the user's goal and all context, including any insights gained from the regex matches. The prompt should be self-contained and ready to be used. It must clearly define the AI's role, the specific task, any constraints, and the expected format.
+    `;
+  } else {
+    metaPrompt += `
+    Based on this information, generate an optimized prompt. The prompt should be self-contained and ready to be used. It must clearly define the AI's role, the specific task, any constraints, the expected format, and provide examples if it would improve clarity.
+    `;
+  }
+
 
   try {
+    let requestContents: any;
+    if (file && file.type.startsWith('image/')) {
+      // It's a data URL like "data:image/png;base64,iVBORw..."
+      const [mimeTypePart, base64Data] = file.content.split(';base64,');
+      const mimeType = mimeTypePart.split(':')[1];
+      
+      requestContents = {
+        parts: [
+            { text: metaPrompt },
+            {
+                inlineData: {
+                    mimeType,
+                    data: base64Data,
+                },
+            },
+        ],
+      };
+    } else {
+        requestContents = metaPrompt;
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: metaPrompt,
+      contents: requestContents,
       config: {
         tools: [{ googleSearch: {} }],
       },
@@ -47,21 +102,53 @@ export async function generatePromptWithGrounding(params: PromptGenerationParams
     const generatedText = response.text;
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
     
-    // Filter out any empty chunks
     const sources = groundingChunks.filter((chunk: unknown) => {
         const c = chunk as GroundingChunk;
         return (c.web && c.web.uri) || (c.maps && c.maps.uri);
     }) as GroundingChunk[];
+    
+    let prompt = generatedText.trim();
+    let regexMatches: string[] = [];
+
+    if (enableRegexGrounding && regexPattern) {
+      const separator = '---PROMPT-SEPARATOR---';
+      if (generatedText.includes(separator)) {
+        const parts = generatedText.split(separator);
+        const matchesPart = parts[0].trim();
+        prompt = parts[1]?.trim() || ''; 
+    
+        if (matchesPart && matchesPart.toLowerCase() !== 'no matches found.') {
+          regexMatches = matchesPart.split('\n').map(s => s.trim()).filter(Boolean);
+        }
+      } else {
+        console.warn("Model did not follow formatting instructions for regex grounding. Treating entire output as the prompt.");
+        prompt = generatedText.trim();
+      }
+    }
 
     return {
-      prompt: generatedText.trim(),
-      sources: sources,
+      prompt,
+      sources,
+      regexMatches,
     };
+
   } catch (error) {
     console.error("Error generating prompt with Gemini:", error);
     if (error instanceof Error) {
-        throw new Error(`Gemini API call failed: ${error.message}`);
+        if (error.message.includes('API key not valid')) {
+            throw new Error("[API Key Error] Your API key is invalid. Please check your configuration and ensure it has the necessary permissions.");
+        }
+        if (error.message.toLowerCase().includes('failed to fetch')) {
+            throw new Error("[Network Error] Could not connect to the Gemini API. Please check your internet connection and try again.");
+        }
+        if (error.message.includes('429')) { 
+            throw new Error("[API Quota Exceeded] You have exceeded your request quota. Please check your Gemini API plan and billing details.");
+        }
+        if (error.message.match(/\[\d{3}\]/)) { 
+            throw new Error(`[API Error] The model failed to generate a response. Details: ${error.message}`);
+        }
+        throw new Error(`[Service Error] An unexpected error occurred while communicating with the API: ${error.message}`);
     }
-    throw new Error("An unknown error occurred during the Gemini API call.");
+    throw new Error("[Unknown Error] An unexpected issue occurred. Please try again.");
   }
 }
