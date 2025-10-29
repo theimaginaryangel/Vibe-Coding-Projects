@@ -9,7 +9,7 @@ export const Header: React.FC = () => {
         <div className="flex items-center space-x-3">
           <SparklesIcon className="w-8 h-8 text-blue-500" />
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-            AI Prompt Engineer
+            Benny's AI Prompt Engineer
           </h1>
         </div>
         <p className="hidden md:block text-gray-500 dark:text-gray-400">
