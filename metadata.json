@@ -1,0 +1,5 @@
+{
+  "name": "AI Prompt Engineer",
+  "description": "An application that leverages AI with Google Search grounding to help users craft effective and contextually-aware prompts for generative models.",
+  "requestFramePermissions": []
+}
