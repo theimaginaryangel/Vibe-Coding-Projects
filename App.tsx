@@ -16,7 +16,7 @@ type ActiveView = 'home' | 'promptEngineer' | 'chat';
 const HomeView: React.FC<{ onSelectView: (view: ActiveView) => void }> = ({ onSelectView }) => (
   <div className="flex flex-col items-center justify-center h-full text-center">
     <div className="max-w-4xl">
-      <h1 className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-white">Welcome to Benny's AI Suite</h1>
+      <h1 className="text-4xl md:text-5xl font-bold text-gray-800 dark:text-white">Welcome to AI Suite</h1>
       <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
         Powerful tools to enhance your interaction with generative AI. Choose an option below to get started.
       </p>

@@ -11,7 +11,7 @@ interface HeaderProps {
 }
 
 const TITLES: Record<ActiveView, string> = {
-    home: "Benny's AI Suite",
+    home: "AI Suite",
     promptEngineer: "AI Prompt Engineer",
     chat: "AI Assistant"
 };
