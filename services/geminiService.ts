@@ -1,12 +1,24 @@
-
 import { GoogleGenAI, Chat } from "@google/genai";
 import type { PromptGenerationParams, GroundingChunk, ChatMode, ChatMessage } from '../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable not set");
-}
+// Lazily initialize the AI client to avoid script-blocking errors on load
+// if the API key is not yet available.
+let aiInstance: GoogleGenAI | null = null;
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+function getAiClient(): GoogleGenAI {
+  if (aiInstance) {
+    return aiInstance;
+  }
+
+  if (!process.env.API_KEY) {
+    // Throw an error that will be caught by the calling function's error handler.
+    // This allows the UI to load and display a meaningful error message upon user interaction.
+    throw new Error("[Configuration Error] The API_KEY environment variable is not set. The application cannot connect to the AI service.");
+  }
+
+  aiInstance = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  return aiInstance;
+}
 
 // --- PROMPT ENGINEERING SERVICE ---
 
@@ -90,7 +102,8 @@ export async function generatePromptWithGrounding(params: PromptGenerationParams
     } else {
         requestContents = metaPrompt;
     }
-
+    
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: requestContents,
@@ -177,6 +190,7 @@ function getChatSession(mode: ChatMode): Chat {
     return chatSessions.get(mode)!;
   }
   
+  const ai = getAiClient();
   const { modelName, config } = getModelConfigForMode(mode);
   
   const chat = ai.chats.create({

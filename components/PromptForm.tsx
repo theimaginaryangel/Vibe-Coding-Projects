@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { TONE_OPTIONS, FORMAT_OPTIONS } from '../constants';
+import { TONE_OPTIONS, FORMAT_OPTIONS, PROMPT_TEMPLATES } from '../constants';
 import type { PromptGenerationParams } from '../types';
 import { SparklesIcon } from './icons/SparklesIcon';
 import { UploadIcon } from './icons/UploadIcon';
@@ -34,6 +34,7 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
   const [file, setFile] = useState<{ name: string; type: string; content: string; } | null>(null);
   const [linkUrl, setLinkUrl] = useState('');
   const [historyFileInfo, setHistoryFileInfo] = useState<{ name: string; type: string; } | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState('');
 
   useEffect(() => {
     if (initialData) {
@@ -46,8 +47,47 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
       setLinkUrl(initialData.linkUrl || '');
       setFile(null); // Always clear file content on load from history
       setHistoryFileInfo(initialData.fileInfo || null);
+      setSelectedTemplate(''); // Reset template selection when loading from history
     }
   }, [initialData]);
+
+  const removeFile = () => {
+    setFile(null);
+    setHistoryFileInfo(null);
+    // Also clear the file input element
+    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+    if(fileInput) fileInput.value = '';
+  }
+  
+  const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const templateName = e.target.value;
+    setSelectedTemplate(templateName);
+
+    if (templateName) {
+      const template = PROMPT_TEMPLATES.find(t => t.name === templateName);
+      if (template) {
+        setUserInput(template.userInput);
+        setContext(template.context);
+        setTone(template.tone);
+        setFormat(template.format);
+        // Reset other fields
+        setEnableRegexGrounding(false);
+        setRegexPattern('');
+        removeFile();
+        setLinkUrl('');
+      }
+    } else {
+      // Clear the form if they select the default "Select a template..." option
+      setUserInput('');
+      setContext('');
+      setTone(TONE_OPTIONS[0]);
+      setFormat(FORMAT_OPTIONS[0]);
+      setEnableRegexGrounding(false);
+      setRegexPattern('');
+      removeFile();
+      setLinkUrl('');
+    }
+  };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -74,14 +114,6 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
     }
   };
   
-  const removeFile = () => {
-    setFile(null);
-    setHistoryFileInfo(null);
-    // Also clear the file input element
-    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-    if(fileInput) fileInput.value = '';
-  }
-  
   const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLinkUrl(e.target.value);
     removeFile();
@@ -96,6 +128,26 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
     <form onSubmit={handleSubmit} className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Craft Your Prompt Request</h2>
       
+       <div className="space-y-2">
+        <Label htmlFor="template-select" description="Start with a pre-defined structure for common tasks.">
+          Prompt Template (Optional)
+        </Label>
+        <select
+          id="template-select"
+          value={selectedTemplate}
+          onChange={handleTemplateChange}
+          className="w-full p-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary transition duration-150"
+          aria-label="Select a prompt template"
+        >
+          <option value="">Select a template...</option>
+          {PROMPT_TEMPLATES.map((template) => (
+            <option key={template.name} value={template.name}>
+              {template.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="userInput" description="Describe what you want the AI to do (e.g., 'write a poem about space').">
             Your Goal
@@ -247,7 +299,7 @@ export const PromptForm: React.FC<PromptFormProps> = ({ onSubmit, isLoading, ini
         >
           {isLoading ? (
             <>
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
